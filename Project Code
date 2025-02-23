@@ -1,0 +1,96 @@
+from tkinter import *
+from tkinter import messagebox
+import pandas as pd
+from threading import Thread
+
+#main window
+root = Tk()
+root.title("Find Computer")
+computer_label = Label(root, text='Enter Computer Name')
+computer_label.grid(row=0, column=1)
+computer_entry = Entry(root, width=50)
+computer_entry.grid(row=1, column=1)
+user_label = Label(root, text='Enter Name')
+user_label.grid(row=3, column=1)
+username_entry = Entry(root, width=50)
+username_entry.grid(row=4, column=1)
+location_label = Label(root, text="Enter IP address")
+location_label.grid(row=6, column=1)
+location_entry = Entry(root, width=50)
+location_entry.grid(row=7, column=1)
+
+file_path = ""
+file_path1 = ""
+
+# function to load excel files
+def load_file(file_path):
+    try:
+        df = pd.read_csv(file_path)
+        print(df.columns)
+        messagebox.showinfo("Success", f"Excel file {file_path} loaded successfully!")
+        return df
+    except Exception as e:
+        messagebox.showerror("Error", f"Failed to load file: {e}")
+        return None
+
+def load_files():
+    global df_devices, df_location
+    df_devices = load_file(file_path)
+    df_location = load_file(file_path1)
+
+def load_file_thread():
+    thread = Thread(target=load_files)
+    thread.start()
+
+# Search Device
+
+def search_data():
+    device_name = computer_entry.get()
+    if device_name:
+        try:
+            result = df_devices[df_devices['DeviceName'].astype(str).str.contains(device_name, case=False, na=False)]
+            if not result.empty:
+                messagebox.showinfo("Results", result.to_string())
+            else:
+                messagebox.showinfo("No Results", "No matching data found.")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to search data: {e}")
+
+# Search User in database
+def search_name():
+    primary_user_display_name = username_entry.get()
+    if primary_user_display_name:
+        try:
+            result = df_devices[df_devices['Primaryuserdisplayname'].astype(str).str.contains(primary_user_display_name, case=False, na=False)]
+            if not result.empty:
+                messagebox.showinfo("Results", result.to_string())
+            else:
+                messagebox.showinfo("No Results", "No matching data found.")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to search data: {e}")
+
+# Search Company sites to get IP address and Managers
+def search_location():
+    ip_subnet = location_entry.get()
+    if ip_subnet:
+        try:
+            result = df_location[df_location['IPSubnet'].astype(str).str.contains(ip_subnet, case=False, na=False)]
+            if not result.empty:
+                messagebox.showinfo("Results", result.to_string())
+            else:
+                messagebox.showinfo("No Results", "No matching data found.")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to search data: {e}")
+
+search_button = Button(root, text="Search", command=search_data)
+search_button.grid(row=2, column=1)
+
+search1_button = Button(root, text="Search", command=search_name)
+search1_button.grid(row=5, column=1)
+
+location_button = Button(root, text="Search", command=search_location)
+location_button.grid(row=8, column=1)
+
+load_file_thread()
+
+root.mainloop()
